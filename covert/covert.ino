@@ -1,12 +1,12 @@
 #include <IRremote.h>
 
-#define RECV_PIN  15   // GPIO для приёмника
-#define SEND_PIN  4    // GPIO для передатчика
+// ⚠️ ПОПРОБУЙТЕ ЭТИ ПИНЫ ВМЕСТО 15/4
+#define RECV_PIN  25   // GPIO 25 (вместо 15)
+#define SEND_PIN  26   // GPIO 26 (вместо 4)
 
 IRrecv irrecv(RECV_PIN);
 IRsend irsend(SEND_PIN);
 
-// Флаги и данные
 bool hasCapturedData = false;
 uint32_t lastAddress = 0;
 uint16_t lastCommand = 0;
@@ -15,62 +15,74 @@ uint16_t lastFlags = 0;
 
 void setup() {
   Serial.begin(115200);
+  while (!Serial); // Ждём подключения Serial (важно для отладки)
   
-  // Инициализация приёма
-  irrecv.enableIRIn();
+  Serial.println();
+  Serial.println("=== Covert IR Remote v2 ===");
+  Serial.print("Init IR Receiver on GPIO ");
+  Serial.println(RECV_PIN);
   
-  Serial.println("=== Covert IR Remote ===");
-  Serial.println("Board: NodeMCU-32S (ESP32)");
-  Serial.println("Ready. Press any IR button, then type GO.");
+  // Инициализация
+  bool initResult = irrecv.enableIRIn();
+  
+  if (initResult) {
+    Serial.println("✅ IR Receiver initialized OK");
+  } else {
+    Serial.println("❌ IR Receiver init FAILED!");
+    Serial.println("Check wiring and pin number");
+  }
+  
+  Serial.println("Ready. Press any IR button...");
+  Serial.println("Type TEST to check connection");
   Serial.println();
 }
 
 void loop() {
-  // Проверяем, пришли ли данные
+  // Проверка данных
   if (irrecv.decode()) {
-    // Сохраняем данные
     lastProtocol = irrecv.decodedIRData.protocol;
     lastAddress = irrecv.decodedIRData.address;
     lastCommand = irrecv.decodedIRData.command;
     lastFlags = irrecv.decodedIRData.flags;
     hasCapturedData = true;
     
-    // Выводим информацию
-    Serial.print("✅ Captured! Protocol: ");
+    Serial.print("✅ CAPTURED! Protocol: ");
     Serial.print(lastProtocol);
-    Serial.print(" Address: 0x");
+    Serial.print(" Addr: 0x");
     Serial.print(lastAddress, HEX);
-    Serial.print(" Command: 0x");
+    Serial.print(" Cmd: 0x");
     Serial.println(lastCommand, HEX);
     
-    // Повторный запуск приёма
     irrecv.resume();
   }
 
-  // Обработка команд из Serial
+  // Команды
   if (Serial.available()) {
     String s = Serial.readStringUntil('\n');
     s.trim();
     
     if (s.equalsIgnoreCase("GO")) {
-      if (hasCapturedData && lastProtocol != UNKNOWN && lastProtocol < 27) {
+      if (hasCapturedData && lastProtocol != UNKNOWN) {
         Serial.println("📡 Sending...");
-        
-        // Отправляем данные
         irsend.write(lastProtocol, lastAddress, lastCommand, lastFlags);
-        
         Serial.println("✅ Sent!");
       } else {
-        Serial.println("❌ No valid code captured.");
+        Serial.println("❌ No data captured yet");
       }
-    } else if (s.equalsIgnoreCase("TEST")) {
-      // Тестовая команда для проверки связи
-      Serial.println("🔊 Serial connection OK!");
-      Serial.print("Has data: ");
+    } 
+    else if (s.equalsIgnoreCase("TEST")) {
+      Serial.println("🔊 Serial OK!");
+      Serial.print("📥 Has Data: ");
       Serial.println(hasCapturedData ? "YES" : "NO");
+      Serial.print("📍 Protocol: ");
+      Serial.println(lastProtocol);
+    }
+    else if (s.equalsIgnoreCase("SCAN")) {
+      Serial.println("🔍 Scanning for IR signals...");
+      Serial.println("Point remote at receiver and press any button");
+      delay(1000);
     }
   }
   
-  // Небольшая задержка для стабильности
   delay(10);
 }

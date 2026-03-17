@@ -81,9 +81,9 @@ jobs:
             
             ### 🔧 Installation
             
-```bash
+            \`\`\`bash
             esptool.py --chip esp32 --port /dev/ttyUSB0 write_flash 0x10000 covert.bin
-```
+            \`\`\`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -1,0 +1,23 @@
+# Build outputs
+build/
+*.bin
+*.elf
+*.map
+
+# Arduino IDE
+*.tmp
+*.log
+
+# PlatformIO (if used)
+.pio/
+lib_deps/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

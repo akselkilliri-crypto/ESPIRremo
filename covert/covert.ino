@@ -19,16 +19,18 @@ void setup() {
 
 void loop() {
   if (irrecv.decode()) {
-    irrecv.read(&capturedData);  // Исправлено: передаём указатель
-    hasCapturedData = true;
-    
-    Serial.print("Captured: protocol=");
-    Serial.print(capturedData.protocol);
-    Serial.print(" address=0x");
-    Serial.print(capturedData.address, HEX);
-    Serial.print(" command=0x");
-    Serial.println(capturedData.command, HEX);
-    
+    IRData* data = irrecv.read();  // Возвращает указатель
+    if (data) {
+      capturedData = *data;         // Разыменовываем указатель
+      hasCapturedData = true;
+      
+      Serial.print("Captured: protocol=");
+      Serial.print(capturedData.protocol);
+      Serial.print(" address=0x");
+      Serial.print(capturedData.address, HEX);
+      Serial.print(" command=0x");
+      Serial.println(capturedData.command, HEX);
+    }
     irrecv.resume();
   }
 

@@ -47,8 +47,7 @@ jobs:
       - name: Find and Rename Binary
         run: |
           echo "=== Searching for binary files ==="
-          find ./build -name "*.bin" -type f
-          BIN_FILE=$(find ./build -name "*.ino.bin" -type f | head -1)
+          find ./build -name "*.bin" -type f          BIN_FILE=$(find ./build -name "*.ino.bin" -type f | head -1)
           if [ -z "$BIN_FILE" ]; then
             echo "No .ino.bin found, searching for any .bin"
             BIN_FILE=$(find ./build -name "*.bin" -type f | head -1)
@@ -59,7 +58,7 @@ jobs:
           ls -la ./covert.bin
 
       - name: Upload Binary Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/uSUMMARYartifact@v4
         with:
           name: covert-bin-${{ github.sha }}
           path: |
@@ -82,7 +81,8 @@ jobs:
             | **File** | covert.bin |
             | **Commit** | ${{ github.sha }} |
             
-            ### 📥 Installation
+            ### 🔧 Installation
+            
 ```bash
             esptool.py --chip esp32 --port /dev/ttyUSB0 write_flash 0x10000 covert.bin
 ```
@@ -96,5 +96,4 @@ jobs:
           echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Board | NodeMCU-32S |" >> $GITHUB_STEP_SUMMARY
           echo "| FQBN | esp32:esp32:nodemcu-32s |" >> $GITHUB_STEP_SUMMARY
-          echo "| Binary | covert.bin |" >> $GITHUB_STEP_SUMMARY
-          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Binary | covert.bin |" >> $GITHUB_STEP_SUMMARY          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEPSUMMARYY

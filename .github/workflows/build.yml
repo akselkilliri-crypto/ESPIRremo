@@ -1,0 +1,100 @@
+name: Build ESP32 Binary (NodeMCU-32S)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  BOARD_FQBN: esp32:esp32:nodemcu-32s
+  SKETCH_NAME: covert
+  OUTPUT_BINARY: covert.bin
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v1
+
+      - name: Initialize Arduino CLI
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+      - name: Update Core Index
+        run: arduino-cli core update-index
+
+      - name: Install ESP32 Core
+        run: arduino-cli core install esp32:esp32
+
+      - name: Install IRremote Library
+        run: arduino-cli lib install "IRremote"
+
+      - name: Compile Sketch for NodeMCU-32S
+        run: |
+          arduino-cli compile \
+            --fqbn esp32:esp32:nodemcu-32s \
+            --output-dir ./build \
+            ./src
+
+      - name: Find and Rename Binary
+        run: |
+          echo "=== Searching for binary files ==="
+          find ./build -name "*.bin" -type f
+          BIN_FILE=$(find ./build -name "*.ino.bin" -type f | head -1)
+          if [ -z "$BIN_FILE" ]; then
+            echo "No .ino.bin found, searching for any .bin"
+            BIN_FILE=$(find ./build -name "*.bin" -type f | head -1)
+          fi
+          echo "Found: $BIN_FILE"
+          cp "$BIN_FILE" ./covert.bin
+          cp "$BIN_FILE" ./src/covert.bin
+          ls -la ./covert.bin
+
+      - name: Upload Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: covert-bin-${{ github.sha }}
+          path: |
+            covert.bin
+            src/covert.bin
+          retention-days: 30
+
+      - name: Create Release on Tag
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: covert.bin
+          body: |
+            ## 📦 Covert IR Remote Release
+            
+            | Info | Value |
+            |------|-------|
+            | **Board** | NodeMCU-32S (ESP32) |
+            | **FQBN** | esp32:esp32:nodemcu-32s |
+            | **File** | covert.bin |
+            | **Commit** | ${{ github.sha }} |
+            
+            ### 📥 Installation
+```bash
+            esptool.py --chip esp32 --port /dev/ttyUSB0 write_flash 0x10000 covert.bin
+```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Summary
+        run: |
+          echo "## ✅ Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Board | NodeMCU-32S |" >> $GITHUB_STEP_SUMMARY
+          echo "| FQBN | esp32:esp32:nodemcu-32s |" >> $GITHUB_STEP_SUMMARY
+          echo "| Binary | covert.bin |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY

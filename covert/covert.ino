@@ -22,15 +22,9 @@ void setup() {
   Serial.print("Init IR Receiver on GPIO ");
   Serial.println(RECV_PIN);
   
-  // Инициализация
-  bool initResult = irrecv.enableIRIn();
-  
-  if (initResult) {
-    Serial.println("✅ IR Receiver initialized OK");
-  } else {
-    Serial.println("❌ IR Receiver init FAILED!");
-    Serial.println("Check wiring and pin number");
-  }
+  // Инициализация (функция возвращает void)
+  irrecv.enableIRIn();
+  Serial.println("✅ IR Receiver initialized");
   
   Serial.println("Ready. Press any IR button...");
   Serial.println("Type TEST to check connection");

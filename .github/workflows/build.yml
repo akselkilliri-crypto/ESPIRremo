@@ -42,28 +42,26 @@ jobs:
           arduino-cli compile \
             --fqbn esp32:esp32:nodemcu-32s \
             --output-dir ./build \
-            ./src
+            ./covert
 
       - name: Find and Rename Binary
         run: |
           echo "=== Searching for binary files ==="
-          find ./build -name "*.bin" -type f          BIN_FILE=$(find ./build -name "*.ino.bin" -type f | head -1)
+          find ./build -name "*.bin" -type f
+          BIN_FILE=$(find ./build -name "*.ino.bin" -type f | head -1)
           if [ -z "$BIN_FILE" ]; then
             echo "No .ino.bin found, searching for any .bin"
             BIN_FILE=$(find ./build -name "*.bin" -type f | head -1)
           fi
           echo "Found: $BIN_FILE"
           cp "$BIN_FILE" ./covert.bin
-          cp "$BIN_FILE" ./src/covert.bin
           ls -la ./covert.bin
 
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
           name: covert-bin-${{ github.sha }}
-          path: |
-            covert.bin
-            src/covert.bin
+          path: covert.bin
           retention-days: 30
 
       - name: Create Release on Tag
@@ -83,9 +81,9 @@ jobs:
             
             ### 🔧 Installation
             
-            \`\`\`bash
+```bash
             esptool.py --chip esp32 --port /dev/ttyUSB0 write_flash 0x10000 covert.bin
-            \`\`\`
+```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -96,4 +94,5 @@ jobs:
           echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Board | NodeMCU-32S |" >> $GITHUB_STEP_SUMMARY
           echo "| FQBN | esp32:esp32:nodemcu-32s |" >> $GITHUB_STEP_SUMMARY
-          echo "| Binary | covert.bin |" >> $GITHUB_STEP_SUMMARY          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Binary | covert.bin |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY

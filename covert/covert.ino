@@ -7,6 +7,7 @@ IRrecv irrecv(RECV_PIN);
 IRsend irsend(SEND_PIN);
 
 IRData capturedData;
+bool hasCapturedData = false;
 
 void setup() {
   Serial.begin(115200);
@@ -18,13 +19,16 @@ void setup() {
 
 void loop() {
   if (irrecv.decode()) {
-    capturedData = irrecv.read();
+    irrecv.read(&capturedData);  // Исправлено: передаём указатель
+    hasCapturedData = true;
+    
     Serial.print("Captured: protocol=");
     Serial.print(capturedData.protocol);
     Serial.print(" address=0x");
     Serial.print(capturedData.address, HEX);
     Serial.print(" command=0x");
     Serial.println(capturedData.command, HEX);
+    
     irrecv.resume();
   }
 
@@ -32,7 +36,7 @@ void loop() {
     String s = Serial.readStringUntil('\n');
     s.trim();
     if (s.equalsIgnoreCase("GO")) {
-      if (capturedData.protocol > 0 && capturedData.protocol < 27) {
+      if (hasCapturedData && capturedData.protocol > 0 && capturedData.protocol < 27) {
         Serial.println("Sending...");
         irsend.write(&capturedData);
       } else {

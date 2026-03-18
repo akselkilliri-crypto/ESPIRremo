@@ -1,7 +1,7 @@
 #include <IRremote.h>
 
 // 🔧 ПИНЫ (попробуйте разные, если не работает)
-#define RECV_PIN  4    // GPIO 4 для IR приёмника
+#define RECV_PIN  25    // GPIO 4 для IR приёмника
 
 IRrecv irrecv(RECV_PIN);
 
